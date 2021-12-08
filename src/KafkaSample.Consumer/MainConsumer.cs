@@ -21,13 +21,31 @@ namespace KafkaSample.Consumer
         {
             var bootstrapServers = _configuration["KAFKA_BOOTSTRAP_SERVERS"];
             var topic = _configuration["KAFKA_BOOTSTRAP_TOPIC"];
+            ConsumerConfig config = new ConsumerConfig();
 
-            var config = new ConsumerConfig
+            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Local")
             {
-                GroupId = "test-consumer-group",
-                BootstrapServers = bootstrapServers,
-                AutoOffsetReset = AutoOffsetReset.Earliest
-            };
+                config = new ConsumerConfig
+                {
+                    BootstrapServers = bootstrapServers,
+                    GroupId = "test-consumer-group",
+                    AutoOffsetReset = AutoOffsetReset.Earliest
+                };
+            }
+            else
+            {
+                config = new ConsumerConfig
+                {
+                    BootstrapServers = bootstrapServers,
+                    GroupId = "test-consumer-group",
+                    SaslUsername = _configuration["CLOUDKARAFKA_USERNAME"],
+                    SaslPassword = _configuration["CLOUDKARAFKA_PASSWORD"],
+                    SaslMechanism = SaslMechanism.ScramSha256,
+                    SecurityProtocol = SecurityProtocol.SaslSsl,
+                    EnableSslCertificateVerification = false,
+                    AutoOffsetReset = AutoOffsetReset.Earliest
+                };
+            }
 
             using (var builder = new ConsumerBuilder<Ignore, string>(config).Build())
             {
