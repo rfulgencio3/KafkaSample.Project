@@ -22,7 +22,7 @@ namespace KafkaSample.Producer
             var bootstrapServers = _configuration["KAFKA_BOOTSTRAP_SERVERS"];
             var topic = _configuration["KAFKA_BOOTSTRAP_TOPIC"];
 
-            var config = new ProducerConfig { BootstrapServers = "localhost:9092" };
+            var config = new ProducerConfig { BootstrapServers = bootstrapServers };
 
             using (var builder = new ProducerBuilder<Null, string>(config).Build())
             {
