@@ -1,51 +1,35 @@
 ﻿using Confluent.Kafka;
+using KafkaSample.Producer;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace KafkaSample.Consumer
 {
-    internal class Program
+    class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            var conf = new ConsumerConfig
-            {
-                GroupId = "test-consumer-group",
-                BootstrapServers = "localhost:9092",
-                AutoOffsetReset - AutoOffsetReset.Earliest
-            };
+            var hostBuilder = CreateHostBuilder(args);
+            await hostBuilder.RunConsoleAsync();
+        }
 
-            using (var c = new ConsumerBuilder<Ignore, string>(conf).Build())
-            {
-                c.Subscribe("test-publish-topic");
-
-                var cts = new CancellationTokenSource();
-                Console.CancelKeyPress += (_, e) =>
+        private static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            var hostBuilder = Host.CreateDefaultBuilder(args)
+                .ConfigureServices((context, services) => { services.AddHostedService<MainProducer>(); })
+                .ConfigureAppConfiguration(configuration =>
                 {
-                    e.Cancel = true;
-                    cts.Cancel();
-                };
-
-                try
-                {
-                    while (true)
-                    {
-                        try
-                        {
-                            var cr = c.Consume(cts.Token);
-                            Console.WriteLine($"Consumed message '{cr.Value}' at: '{cr.TopicPartitionOffset}'.");
-                        }
-                        catch (ConsumeException ex)
-                        {
-                            Console.Write($"Error ocurred: {ex.Error.Reason}");
-                        }
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    c.Close();
-                }
-            }
+                    configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                    configuration.AddJsonFile(
+                        $"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json",
+                        optional: true);
+                    configuration.AddEnvironmentVariables();
+                });
+            return hostBuilder;
         }
     }
 }
