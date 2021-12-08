@@ -21,8 +21,24 @@ namespace KafkaSample.Producer
         {
             var bootstrapServers = _configuration["KAFKA_BOOTSTRAP_SERVERS"];
             var topic = _configuration["KAFKA_BOOTSTRAP_TOPIC"];
+            ProducerConfig config = new ProducerConfig();
 
-            var config = new ProducerConfig { BootstrapServers = bootstrapServers };
+            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Local")
+            {
+                config = new ProducerConfig { BootstrapServers = bootstrapServers };
+            }
+            else
+            {
+                config = new ProducerConfig 
+                { 
+                    BootstrapServers = bootstrapServers,
+                    SaslUsername = _configuration["CLOUDKARAFKA_USERNAME"],
+                    SaslPassword = _configuration["CLOUDKARAFKA_PASSWORD"],
+                    SaslMechanism = SaslMechanism.ScramSha256,
+                    SecurityProtocol = SecurityProtocol.SaslSsl,
+                    EnableSslCertificateVerification = false
+                };
+            }
 
             using (var builder = new ProducerBuilder<Null, string>(config).Build())
             {
