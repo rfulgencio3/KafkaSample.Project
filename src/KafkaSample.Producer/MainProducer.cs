@@ -40,7 +40,7 @@ namespace KafkaSample.Producer
                 };
             }
 
-            using (var builder = new ProducerBuilder<Null, string>(config).Build())
+            using (var builder = new ProducerBuilder<string, string>(config).Build())
             {
                 try
                 {
@@ -48,7 +48,7 @@ namespace KafkaSample.Producer
                     while (count <= 100)
                     {
                         var producer = await builder.ProduceAsync(topic,
-                            new Message<Null, string> { Value = $"publish-test: {count}" });
+                            new Message<string, string> { Key = Guid.NewGuid().ToString(), Value = $"publish-test: {count}" });
 
                         Console.WriteLine($"Delivered '{producer.Value}' to '{producer.TopicPartitionOffset}'");
                         count++;
@@ -56,7 +56,7 @@ namespace KafkaSample.Producer
                         Thread.Sleep(2000);
                     }
                 }
-                catch (ProduceException<Null, string> ex)
+                catch (ProduceException<string, string> ex)
                 {
                     Console.WriteLine($"Delivery failed: {ex.Error.Reason}");
                 }
